@@ -116,4 +116,61 @@ describe('Node Server Request Listener Function', function() {
       });
   });
 
+  it('Should retrieve all previously posted messages', function() {
+    var stubMsg = {
+      username: 'Jono',
+      text: 'Do my bidding!'
+    };
+
+    var stubMsg2 = {
+      username: 'Fred',
+      text: 'Do my sprint!'
+    };
+
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var req2 = new stubs.request('/classes/messages', 'POST', stubMsg2);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+    handler.requestHandler(req2, res);
+
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(200);
+    var messages = JSON.parse(res._data).results;
+    expect(messages.length).to.be.above(1);
+    expect(messages[0].username).to.equal('Jono');
+    expect(messages[3].username).to.equal('Fred');
+    expect(messages[0].text).to.equal('Do my bidding!');
+    expect(messages[3].text).to.equal('Do my sprint!');
+    expect(res._ended).to.equal(true);
+  });
+
+  it('Should not complete a request that is not POST or GET', function() {
+    var req = new stubs.request('/classes/messages', 'PATCH');
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(501);
+    expect(res._ended).to.equal(true);
+  });
+
+  it('Should return a list of methods allowed on the server', function() {
+    var req = new stubs.request('/classes/messages', 'OPTIONS');
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(200);
+    expect(res._ended).to.equal(true);
+  });
 });
+
+
+
+
+

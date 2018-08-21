@@ -19,38 +19,47 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+var responseBody = {
+  results: []
+};
+
 var requestHandler = function(request, response) {
 
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  var results = [];
-  var responseBody = {
-    results: []
-  };
 
   var statusCode = 200;
   var headers = defaultCorsHeaders;
 
   headers['Content-Type'] = 'text/plain';
 
-  // if (request.method === 'GET') {
-    
-  // }
+  if (request.url !== '/classes/messages') {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end('failed');
+  }
 
   if (request.method === 'POST') {
     statusCode = 201;
     request.on('data', chunk => {
-      results.push(chunk);
-    }).on('end', () => {
-      results = Buffer.concat(results).toString();
+      responseBody.results.push(JSON.parse(chunk));
     });
-    response.end(JSON.stringify(results));
-    // responseBody.results.push(request._postData);
+    request.on('end', () => {
+      response.writeHead(statusCode, headers);
+      response.end('message posted');
+    });
+  } else if (request.method === 'GET') {
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(responseBody));
+  } else if (request.method === 'OPTIONS') {
+    response.writeHead(statusCode, headers);
+    response.end(defaultCorsHeaders['access-control-allow-methods']); 
+  } else {
+    statusCode = 501;
+    response.writeHead(statusCode, headers);
+    response.end('invalid method');
   }
 
-
-  response.writeHead(statusCode, headers);
-
-  response.end(JSON.stringify(responseBody));
+  
 };
 
 
