@@ -24,20 +24,17 @@ var responseBody = {
 };
 
 var requestHandler = function(request, response) {
-
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
   var statusCode = 200;
   var headers = defaultCorsHeaders;
+  headers['Content-Type'] = 'application/json';
 
-  headers['Content-Type'] = 'text/plain';
-
-  if (request.url !== '/classes/messages') {
+  if (!request.url.includes('/classes/messages')) {
     statusCode = 404;
     response.writeHead(statusCode, headers);
     response.end('failed');
   }
-
+  
   if (request.method === 'POST') {
     statusCode = 201;
     request.on('data', chunk => {
@@ -58,10 +55,9 @@ var requestHandler = function(request, response) {
     response.writeHead(statusCode, headers);
     response.end('invalid method');
   }
-
   
 };
 
 
-exports.requestHandler = requestHandler;
+module.exports.requestHandler = requestHandler;
 
